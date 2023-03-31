@@ -31,6 +31,7 @@ public class SyntaxTreeCreator {
                 node.setValue(Short.parseShort(variableArray[1].trim()));
             } catch (Exception e) {
                 System.out.println("Error: Incorrect value entered.");
+                return;
             }
         } else {
             System.out.println("The variable [" + key + "] is not used in the expression");
@@ -40,7 +41,7 @@ public class SyntaxTreeCreator {
     }
 
     public boolean checkVariables() {
-        boolean result = variableMap.entrySet().stream().noneMatch(e -> e.getValue().getValue() == 0);
+        boolean result = variableMap.entrySet().stream().noneMatch(e -> e.getValue().getValue() == null);
         if (!result) {
             System.out.println("Not all variables matter.");
             printVariables();
@@ -102,7 +103,7 @@ public class SyntaxTreeCreator {
 
     private SyntaxTree parseAtom() {
         if (expression.charAt(0) >= 97) {
-            SyntaxTree variableNode = new SyntaxTree((short) 0);
+            SyntaxTree variableNode = new SyntaxTree();
             variableMap.put(parseVariable(), variableNode);
             return variableNode;
         } else if (expression.charAt(0) == 40) {
@@ -123,6 +124,7 @@ public class SyntaxTreeCreator {
             if (expression.charAt(numberOfSpace) >= 48 && expression.charAt(numberOfSpace) <= 57
                     || expression.charAt(numberOfSpace) >= 97 && expression.charAt(numberOfSpace) <= 122) {
                 numberOfSpace++;
+                continue;
             }
             break;
         }

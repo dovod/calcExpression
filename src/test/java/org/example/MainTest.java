@@ -1,5 +1,7 @@
 package org.example;
 
+import org.example.service.CalculatorService;
+import org.example.service.RecursiveCalculatorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -9,78 +11,86 @@ import java.io.PrintStream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class MainTest {
-
-    private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    private CalculatorService calculatorService;
+    private ByteArrayOutputStream output = new ByteArrayOutputStream();
 
     @BeforeEach
-    public void setUp() {
-        System.setOut(new PrintStream(outputStream));
+    public void setup() {
+        System.setOut(new PrintStream(output));
     }
-
 
     @Test
     public void genericTest() {
-//        Main.createSyntaxTree("(12 + 2)/ x2 - y*z  + 2 * 3");
-//        assertEquals("Ok", outputStream.toString().trim());
+        calculatorService = new RecursiveCalculatorService();
+        String expression = "(12 + 2)/ x2 - y*z  + 2 * 3";
+        String expected = "9";
+        calculatorService.inputData(expression);
+        calculatorService.inputData("x2=2");
+        calculatorService.inputData("y= 1");
+        calculatorService.inputData(" z = 4 ");
+        String actual = calculatorService.calc();
+        assertEquals(expected, actual);
     }
 
-//    @Test
-//    public void deleteFirstSpaces() {
-//        String expected = "aba";
-//
-//        String input = " aba";
-//        String actual = Main.deleteSpace(input);
-//        assertEquals(expected.toString(), actual.toString());
-//
-//        input = "  aba";
-//        actual = Main.deleteSpace(input);
-//        assertEquals(expected, actual);
-//
-//        input = "         aba";
-//        actual = Main.deleteSpace(input);
-//        assertEquals(expected, actual);
-//
-//        actual = Main.deleteSpace(expected);
-//        assertEquals(expected, actual);
-//    }
-//
-//    @Test
-//    public void parseShortValueTest() {
-//        String input = "123   23 12";
-//        short expected = 123;
-//
-//        short actual = Main.parseShortValue(input);
-//
-//        assertEquals(expected, actual);
-//
-//        input = "1   23 12";
-//        expected = 1;
-//
-//        actual = Main.parseShortValue(input);
-//
-//        assertEquals(expected, actual);
-//
-//        Exception exception = assertThrows(RuntimeException.class, () -> {
-//            Main.parseShortValue("123a 34 94");
-//        });
-//
-//        assertEquals("Error parse digit", exception.getMessage());
-//    }
-//
-//    @Test
-//    public void parseOperationTest() {
-//        String input = "+ 123";
-//        Operation expected = Operation.ADD;
-//
-//        Operation actual = Main.parseOperator(input);
-//
-//        assertEquals(expected, actual);
-//
-//        Exception exception = assertThrows(RuntimeException.class, () -> {
-//            Main.parseOperator("& 23a 34 94");
-//        });
-//
-//        assertEquals("Operation not found", exception.getMessage());
-//    }
+    @Test
+    public void redefiningVariablesTest() {
+        calculatorService = new RecursiveCalculatorService();
+        String expression = "(12 + 2)/ x2 - y*z + (2+ 2) * 3";
+        String expected = "15";
+        calculatorService.inputData(expression);
+        calculatorService.inputData("x2=2");
+        calculatorService.inputData("y= 1");
+        calculatorService.inputData(" z = 4 ");
+        String actual = calculatorService.calc();
+        assertEquals(expected, actual);
 
+        expected = "12";
+        calculatorService.inputData("x2 = 7");
+        calculatorService.inputData("z = 2");
+        actual = calculatorService.calc();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void redefiningExpressionTest() {
+        calculatorService = new RecursiveCalculatorService();
+        String expression = "(12 + 2)/ x2 - y*z  + 2 * 3";
+        String expected = "9";
+        calculatorService.inputData(expression);
+        calculatorService.inputData("x2=2");
+        calculatorService.inputData("y= 1");
+        calculatorService.inputData(" z = 4 ");
+        String actual = calculatorService.calc();
+        assertEquals(expected, actual);
+
+        expression = "(12 + 2)/ a - b*c + (2+ 2) * 3";
+        expected = "6";
+        calculatorService.cleanAll();
+        calculatorService.inputData(expression);
+        calculatorService.inputData("a=7");
+        calculatorService.inputData("b= 4");
+        calculatorService.inputData(" c = 2 ");
+        actual = calculatorService.calc();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void expressionContainsBigInteger() {
+        calculatorService = new RecursiveCalculatorService();
+        String expression = "50000 + 1";
+        calculatorService.inputData(expression);
+        String expected = "Enter the expression:\n" +
+                "Expression parsing error. Please enter the correct expression. ";
+        assertEquals(expected.length(), output.toString().trim().length());
+    }
+
+    @Test
+    public void inputVariable_BigInteger() {
+        calculatorService = new RecursiveCalculatorService();
+        String expression = "(12 + 2)/ x2 - y*z  + 2 * 3";
+        int expected = 58;
+        calculatorService.inputData(expression);
+        calculatorService.inputData("x2=50000");
+        assertEquals(expected, output.toString().trim().length());
+    }
 }

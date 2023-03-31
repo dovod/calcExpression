@@ -1,7 +1,7 @@
 package org.example;
 
 public class SyntaxTree {
-    private short value;
+    private Short value;
     private Operation operation;
     private SyntaxTree leftNode;
     private SyntaxTree rightNode;
@@ -11,7 +11,7 @@ public class SyntaxTree {
     }
 
 
-    public SyntaxTree(short value) {
+    public SyntaxTree(Short value) {
         this.value = value;
     }
 
@@ -42,7 +42,7 @@ public class SyntaxTree {
         this.operation = operation;
     }
 
-    public short getValue() {
+    public Short getValue() {
         return value;
     }
 
