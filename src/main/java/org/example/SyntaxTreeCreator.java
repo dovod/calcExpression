@@ -7,17 +7,21 @@ import java.util.stream.Collectors;
 public class SyntaxTreeCreator {
     private final Map<String, SyntaxTree> variableMap = new LinkedHashMap<>();
     private String expression;
+    private int position;
+    private int expLen;
 
     public SyntaxTree createTree(String expression) {
-        this.expression = expression;
-        SyntaxTree syntaxTree = null;
+        this.expression = expression.replaceAll(" ", "");
+        this.position = 0;
+        this.expLen = this.expression.length();
         try {
-            syntaxTree = parseAddSub();
+            SyntaxTree syntaxTree = parseAddSub();
             System.out.println("Ok");
+            return syntaxTree;
         } catch (Throwable e) {
             System.out.println("Expression parsing error. Please enter the correct expression.");
+            return null;
         }
-        return syntaxTree;
     }
 
     public void setVariableValues(String variable) {
@@ -59,14 +63,14 @@ public class SyntaxTreeCreator {
     private SyntaxTree parseAddSub() {
         SyntaxTree left = parseMulDiv();
 
-        while (!expression.isBlank()) {
-            Operation op = parseOperator(expression);
+        while (position < expLen) {
+            Operation op = parseOperator();
 
             if (op == null || (!Operation.ADD.equals(op) && !Operation.SUB.equals(op))) {
                 return left;
             }
 
-            expression = cutExpression(expression, 1);
+            position++;
             SyntaxTree right = parseMulDiv();
 
             SyntaxTree node = new SyntaxTree();
@@ -82,13 +86,13 @@ public class SyntaxTreeCreator {
     private SyntaxTree parseMulDiv() {
         SyntaxTree left = parseAtom();
 
-        while (!expression.isBlank()) {
-            Operation op = parseOperator(expression);
+        while (position < expLen) {
+            Operation op = parseOperator();
             if (op == null || (!Operation.MUL.equals(op) && !Operation.MOD.equals(op))) {
                 return left;
             }
 
-            expression = cutExpression(expression, 1);
+            position++;
             SyntaxTree right = parseAtom();
 
             SyntaxTree node = new SyntaxTree();
@@ -102,67 +106,51 @@ public class SyntaxTreeCreator {
     }
 
     private SyntaxTree parseAtom() {
-        if (expression.charAt(0) >= 97) {
+        if (expression.charAt(position) >= 97) {
             SyntaxTree variableNode = new SyntaxTree();
             variableMap.put(parseVariable(), variableNode);
             return variableNode;
-        } else if (expression.charAt(0) == 40) {
-            expression = cutExpression(expression, 1);
+        } else if (expression.charAt(position) == 40) {
+            position++;
             SyntaxTree node = parseAddSub();
-            if (expression.charAt(0) != 41) {
+            if (expression.charAt(position) != 41) {
                 throw new IllegalArgumentException("Expected closing bracket");
             }
-            expression = cutExpression(expression, 1);
+            position++;
             return node;
         }
         return new SyntaxTree(parseShortValue());
     }
 
     private String parseVariable() {
-        int numberOfSpace = 0;
-        while (expression.length() > numberOfSpace) {
-            if (expression.charAt(numberOfSpace) >= 48 && expression.charAt(numberOfSpace) <= 57
-                    || expression.charAt(numberOfSpace) >= 97 && expression.charAt(numberOfSpace) <= 122) {
-                numberOfSpace++;
+        int startPosition = position;
+        while (position < expLen) {
+            if (expression.charAt(position) >= 48 && expression.charAt(position) <= 57
+                    || expression.charAt(position) >= 97 && expression.charAt(position) <= 122) {
+                position++;
                 continue;
             }
             break;
         }
-        String result = expression.substring(0, numberOfSpace);
-        expression = cutExpression(expression, numberOfSpace);
-        return result;
+        return expression.substring(startPosition, position);
     }
 
-    private String cutExpression(String exp, int cutLen) {
-        return deleteSpace(exp.substring(cutLen));
-    }
-
-    private short parseShortValue() {
-        int numberOfSpace = 0;
-        while (expression.length() > numberOfSpace
-                && expression.charAt(numberOfSpace) >= 48 && expression.charAt(numberOfSpace) <= 57) {
-            numberOfSpace++;
+    private Short parseShortValue() {
+        int startPosition = position;
+        while (position < expLen
+                && expression.charAt(position) >= 48 && expression.charAt(position) <= 57) {
+            position++;
         }
         try {
-            String digit = expression.substring(0, numberOfSpace);
-            short result = Short.parseShort(digit);
-            expression = cutExpression(expression, numberOfSpace);
-            return result;
+            String digit = expression.substring(startPosition, position);
+            return Short.parseShort(digit);
         } catch (Exception e) {
             throw new RuntimeException("Error parse digit");
         }
     }
 
-    private Operation parseOperator(String exp) {
-        return Operation.getBySymbol(exp.charAt(0));
+    private Operation parseOperator() {
+        return Operation.getBySymbol(expression.charAt(position));
     }
 
-    private String deleteSpace(String exp) {
-        int numberOfSpace = 0;
-
-        while (exp.length() > numberOfSpace && exp.charAt(numberOfSpace) == ' ') {
-            numberOfSpace++;
-        }
-        return exp.substring(numberOfSpace);
-    }
 }
