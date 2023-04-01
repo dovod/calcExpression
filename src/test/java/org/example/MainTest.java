@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class MainTest {
     private CalculatorService calculatorService;
-    private ByteArrayOutputStream output = new ByteArrayOutputStream();
+    private final ByteArrayOutputStream output = new ByteArrayOutputStream();
 
     @BeforeEach
     public void setup() {
@@ -93,4 +93,14 @@ class MainTest {
         calculatorService.inputData("x2=50000");
         assertEquals(expected, output.toString().trim().length());
     }
+
+    @Test
+    public void incorrectNumberBrackets() {
+        calculatorService = new RecursiveCalculatorService();
+        String expression = ")((12 + 2)/ x2 - y*z  + 2 * 3";
+        int expected = 88;
+        calculatorService.inputData(expression);
+        assertEquals(expected, output.toString().length());
+    }
+
 }

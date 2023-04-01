@@ -11,9 +11,9 @@ public class SyntaxTreeCreator {
     private int expLen;
 
     public SyntaxTree createTree(String expression) {
-        this.expression = expression.replaceAll(" ", "");
-        this.position = 0;
-        this.expLen = this.expression.length();
+        this.expression = expression;
+        position = 0;
+        expLen = expression.length();
         try {
             SyntaxTree syntaxTree = parseAddSub();
             System.out.println("Ok");
@@ -106,46 +106,46 @@ public class SyntaxTreeCreator {
     }
 
     private SyntaxTree parseAtom() {
-        if (expression.charAt(position) >= 97) {
-            SyntaxTree variableNode = new SyntaxTree();
-            variableMap.put(parseVariable(), variableNode);
+        char currentChar = expression.charAt(position);
+        if (Character.isLetter(currentChar)) {
+            String variableName = parseVariable();
+            SyntaxTree variableNode = variableMap.computeIfAbsent(variableName, k -> new SyntaxTree());
             return variableNode;
-        } else if (expression.charAt(position) == 40) {
+        } else if (currentChar == '(') {
             position++;
             SyntaxTree node = parseAddSub();
-            if (expression.charAt(position) != 41) {
+            if (expression.charAt(position) != ')') {
                 throw new IllegalArgumentException("Expected closing bracket");
             }
             position++;
             return node;
+        } else {
+            return new SyntaxTree(parseShortValue());
         }
-        return new SyntaxTree(parseShortValue());
     }
 
     private String parseVariable() {
         int startPosition = position;
-        while (position < expLen) {
-            if (expression.charAt(position) >= 48 && expression.charAt(position) <= 57
-                    || expression.charAt(position) >= 97 && expression.charAt(position) <= 122) {
-                position++;
-                continue;
-            }
-            break;
+        while (isAlphanumeric(expression.charAt(position))) {
+            position++;
         }
         return expression.substring(startPosition, position);
     }
 
+    private boolean isAlphanumeric(char c) {
+        return Character.isDigit(c) || Character.isLetter(c);
+    }
+
     private Short parseShortValue() {
         int startPosition = position;
-        while (position < expLen
-                && expression.charAt(position) >= 48 && expression.charAt(position) <= 57) {
+        while (position < expLen && Character.isDigit(expression.charAt(position))) {
             position++;
         }
+        String digit = expression.substring(startPosition, position);
         try {
-            String digit = expression.substring(startPosition, position);
             return Short.parseShort(digit);
-        } catch (Exception e) {
-            throw new RuntimeException("Error parse digit");
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("Error parsing digit");
         }
     }
 

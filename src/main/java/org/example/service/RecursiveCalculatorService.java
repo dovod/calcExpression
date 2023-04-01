@@ -5,14 +5,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.SyntaxTree;
 import org.example.SyntaxTreeCreator;
-import org.example.service.CalculatorService;
-import org.example.service.PrintableStructure;
 
 public class RecursiveCalculatorService implements CalculatorService, PrintableStructure {
     private static final String PATTERN = "[a-z0-9()+-/* ]{1,}";
+    private static final ObjectMapper mapper = new ObjectMapper();
     private SyntaxTree syntaxTree = null;
     private SyntaxTreeCreator creator = null;
-    private static final ObjectMapper mapper = new ObjectMapper();
 
     public RecursiveCalculatorService() {
         init();
@@ -20,10 +18,10 @@ public class RecursiveCalculatorService implements CalculatorService, PrintableS
 
     @Override
     public String calc() {
-        if(syntaxTree != null && creator.checkVariables()) {
+        if (syntaxTree != null && creator.checkVariables()) {
             try {
-               return String.valueOf(calculateExpression(syntaxTree));
-            }catch (Throwable e) {
+                return String.valueOf(calculateExpression(syntaxTree));
+            } catch (Throwable e) {
                 return "Calculation error: " + e.getMessage();
             }
         }
@@ -43,34 +41,63 @@ public class RecursiveCalculatorService implements CalculatorService, PrintableS
 
     @Override
     public String printStructure() {
-            try {
-                return mapper.writeValueAsString(syntaxTree);
-            } catch (JsonProcessingException e) {
-                return "Structure printing error: " + e.getMessage();
-            }
+        try {
+            return mapper.writeValueAsString(syntaxTree);
+        } catch (JsonProcessingException e) {
+            return "Structure printing error: " + e.getMessage();
+        }
     }
 
     @Override
     public void inputData(String data) {
-        if(syntaxTree == null) {
+        if (syntaxTree == null) {
             createSyntaxTree(data);
-        }else {
+        } else {
             creator.setVariableValues(data);
         }
     }
 
     private boolean validateExpression(String data) {
-        boolean match = data.matches(PATTERN);
-        if (!match) {
+        boolean expressionIsValid = data.matches(PATTERN);
+        if (!expressionIsValid) {
             System.out.println("The entered expression contains invalid characters");
+            return expressionIsValid;
         }
-        return match;
+
+        expressionIsValid = checkBrackets(data);
+
+        if (!checkBrackets(data)) {
+            System.out.println("The brackets are not correctly placed in the entered expression");
+            return expressionIsValid;
+        }
+
+        return expressionIsValid;
+    }
+
+    private boolean checkBrackets(String data) {
+        if (data == null || data.isEmpty()) {
+            return true;
+        }
+
+        int count = 0;
+        for (int i = 0; i < data.length(); i++) {
+            char letter = data.charAt(i);
+            if (letter == '(') {
+                count++;
+            } else if (letter == ')') {
+                count--;
+                if (count < 0) {
+                    return false;
+                }
+            }
+        }
+        return count == 0;
     }
 
     private void createSyntaxTree(String expression) {
         if (validateExpression(expression)) {
             creator = new SyntaxTreeCreator();
-            syntaxTree = creator.createTree(expression);
+            syntaxTree = creator.createTree(expression.replaceAll(" ", ""));
         }
     }
 
